@@ -1,5 +1,5 @@
 # 🤖 Research Assistant Agent
-### مشروع التخرج — فريق التطوير
+### مشروع Agent— فريق Logic Lords
 
 ---
 

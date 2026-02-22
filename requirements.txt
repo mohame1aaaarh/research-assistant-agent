@@ -1,0 +1,6 @@
+agno
+chainlit
+google-generativeai
+arxiv
+duckduckgo-search
+pymupdf

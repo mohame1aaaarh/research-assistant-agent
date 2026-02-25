@@ -1,6 +1,6 @@
 import os
 
-path_to_key = os.path.expanduser("~/Desktop/my_api_key.txt")
+path_to_key = os.path.expanduser(r"C:\Users\LENOVO\Desktop\Api Key.txt")
 
 try:
     with open(path_to_key, "r") as file:

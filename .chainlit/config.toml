@@ -27,7 +27,7 @@ allow_origins = ["*"]
 unsafe_allow_html = false
 
 # Process and display mathematical expressions. This can clash with "$" characters in messages.
-latex = false
+latex = true
 
 # Autoscroll new user messages at the top of the window
 user_message_autoscroll = true
@@ -63,9 +63,9 @@ reaction_on_message_received = false
     # 3. For specific file extensions:
     #    accept = { "application/octet-stream" = [".xyz", ".pdb"] }
     # Note: Using "*/*" is not recommended as it may cause browser warnings
-    accept = ["*/*"]
-    max_files = 20
-    max_size_mb = 500
+    accept = ["application/pdf"]
+    max_files = 5
+    max_size_mb = 20
 
 [features.audio]
     # Enable audio features
@@ -94,11 +94,18 @@ reaction_on_message_received = false
 # Name of the assistant.
 name = "Research Assistant Agent"
 
+# أضف هذه الأسطر هنا (حتى لو لم تكن موجودة سابقاً)
+
+# لإخفاء كلمة "Built with Chainlit" في أسفل الصفحة
+hide_chainlit_badge = true
+
+# إذا كنت تريد إخفاء كلمة "Readme" من الزاوية العلوية
+show_readme = true
 # default_theme = "dark"
 
 # Force a specific language for all users (e.g., "en-US", "he-IL", "fr-FR")
 # If not set, the browser's language will be used
-# language = "en-US"
+# language = "ar-SA"
 
 # layout = "wide"
 
@@ -114,7 +121,7 @@ name = "Research Assistant Agent"
 confirm_new_chat = true
 
 # Description of the assistant. This is used for HTML tags.
-# description = ""
+# description = "مساعد بحث أكاديمي ذكي يبحث في المصادر العلمية ويقرأ الأوراق البحثية"
 
 # Chain of Thought (CoT) display mode. Can be "hidden", "tool_call" or "full".
 cot = "full"
@@ -150,10 +157,10 @@ alert_style = "classic"
 # custom_meta_image_url = "https://chainlit-cloud.s3.eu-west-3.amazonaws.com/logo/chainlit_banner.png"
 
 # Load assistant logo directly from URL.
-logo_file_url = ""
+logo_file_url = "/public/logo_dark.png"
 
 # Load assistant avatar image directly from URL.
-default_avatar_file_url = ""
+default_avatar_file_url = "/public/logo_dark.png"
 
 # Specify a custom build directory for the frontend.
 # This can be used to customize the frontend code.

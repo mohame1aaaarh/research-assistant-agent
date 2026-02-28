@@ -1,12 +1,7 @@
 import sys
-
 from agno.agent import Agent
 from agno.models.openai.like import OpenAILike
 from pathlib import Path
-
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
-
 from config import OPENROUTER_KEY
 #difintion agent
 def get_agent():

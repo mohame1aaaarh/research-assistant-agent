@@ -3,7 +3,7 @@ import asyncio
 from agent import get_agent
 
 # إعدادات التحكم
-TYPING_SPEED = 0.02   # كل ما تقل = أسرع
+TYPING_SPEED = 0.009   # كل ما تقل = أسرع
 CURSOR = "▌"
 
 

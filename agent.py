@@ -1,8 +1,12 @@
-import sys
 from agno.agent import Agent
 from agno.models.openai.like import OpenAILike
-from pathlib import Path
+from agno.tools import tool                      
 from config import OPENROUTER_KEY
+from tools.search_tool import search_arxiv
+@tool
+def arxiv_search(query: str) -> str:
+    """ابحث في ArXiv عن أوراق بحثية علمية أكاديمية"""
+    return search_arxiv(query)
 #difintion agent
 def get_agent():
     return Agent(  
@@ -11,6 +15,7 @@ def get_agent():
             api_key=OPENROUTER_KEY,
             base_url="https://openrouter.ai/api/v1",
         ),
+        tools=[arxiv_search],
         markdown=True,
 
         instructions="""

@@ -3,7 +3,9 @@ It uses the `arxiv` library to perform the search and returns a formatted string
 including the title, authors, summary, and a link to the paper. The search can be customized
 """
 import arxiv
+from agno.tools import tool                      
 
+@tool
 def search_arxiv(query: str, max_results: int = 3, sort_by=arxiv.SortCriterion.Relevance, 
     sort_order=arxiv.SortOrder.Descending) -> str:
     """Searches ArXiv for academic papers based on a specific query.

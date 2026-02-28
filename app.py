@@ -1,56 +1,40 @@
 import chainlit as cl
+import asyncio
 from agent import get_agent
 
-
-# =========================
-# START CHAT
-# =========================
-# @cl.on_chat_start
-# async def start():
-#     agent = get_agent()
-#     cl.user_session.set("agent", agent)
-
-#     await cl.Message(
-#         content="""
-# 🔬 **Welcome to Logic Lords Research Assistant**
-
-# I can help you with:
-# - 📄 Summarizing research papers
-# - 🔍 Answering scientific questions
-# - 📚 Providing clear explanations with sources
-
-# 👉 Ask your question below
-# """
-#     ).send()# =========================سيبه حاليا مش عاجبني
+# إعدادات التحكم
+TYPING_SPEED = 0.03   # كل ما تقل = أسرع
+CURSOR = "▌"
 
 
-# =========================
-# HANDLE MESSAGE
-# =========================
+@cl.on_chat_start
+async def start():
+    agent = get_agent()
+    cl.user_session.set("agent", agent)
+
+
 @cl.on_message
 async def main(message: cl.Message):
     agent = cl.user_session.get("agent")
 
-    # ⏳ Typing / Thinking indicator
-    msg = cl.Message(content="🔍 Thinking...")
+    msg = cl.Message(content="🔍I'm thinking...")
     await msg.send()
 
-    try:
-        # تشغيل الـ agent
-        response = agent.run(message.content)
+    response = agent.run(message.content)
+    full_text = response.content
 
-        # ✨ تحسين عرض الرد
-        msg.content = response.content.strip()
+    words = full_text.split()
+    current_text = ""
 
-    except Exception as e:
-        # ⚠️ Error handling
-        msg.content = f"""
-⚠️ **Error occurred**
-Something went wrong while processing your request.
+    for word in words:
+        current_text += word + " "
 
-Details:
-{str(e)}
-"""
+        # عرض النص + cursor
+        msg.content = current_text + CURSOR
+        await msg.update()
 
-    # 🔄 تحديث الرسالة بدل إنشاء واحدة جديدة
+        await asyncio.sleep(TYPING_SPEED)
+
+    # في النهاية نشيل الـ cursor
+    msg.content = current_text.strip()
     await msg.update()

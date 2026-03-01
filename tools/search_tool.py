@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
 ###################################################
 
-    from duckduckgo_search import DDGS
+from duckduckgo_search import DDGS
 
 def search_duckduckgo(query: str, max_results: int = 5) -> str:
     """

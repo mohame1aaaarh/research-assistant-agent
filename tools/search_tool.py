@@ -1,8 +1,12 @@
-"""This module provides a tool for searching ArXiv for academic papers related to a specific query.
+"""This module provides 2 tools for searching:
+1- ArXiv for academic papers related to a specific query.
 It uses the `arxiv` library to perform the search and returns a formatted string containing the results,
 including the title, authors, summary, and a link to the paper. The search can be customized
+2- DuckDuckGo for general web search related to a specific query.
+It uses the `duckduckgo_search` library to perform the search and returns a formatted string.
 """
 import arxiv
+from ddgs import DDGS
 from agno.tools import tool                      
 
 @tool
@@ -65,32 +69,56 @@ if __name__ == "__main__":
 
 ###################################################
 
-    from duckduckgo_search import DDGS
 
+@tool
 def search_duckduckgo(query: str, max_results: int = 5) -> str:
     """
-    بتبحث في محرك DuckDuckGo وترجع النتائج كنص منسق.
+    Searches the web using DuckDuckGo and returns a clean, formatted string.
+    Optimized for integration with AI Agents.
     """
-    try:
-        with DDGS() as ddgs:
-            # بنسحب النتائج من محرك البحث
-            results = list(ddgs.text(query, max_results=max_results))
-            
-        if not results:
-            return "لم يتم العثور على نتائج."
-            
-        # بننسق النتائج عشان الـ Agent يفهمها (عنوان، رابط، وملخص)
-        formatted_results = []
-        for i, res in enumerate(results, 1):
-            result_text = f"النتيجة {i}:\nالعنوان: {res.get('title')}\nالرابط: {res.get('href')}\nالملخص: {res.get('body')}\n"
-            formatted_results.append(result_text)
-            
-        return "\n".join(formatted_results)
-        
-    except Exception as e:
-        return f"حدث خطأ أثناء البحث: {str(e)}"
+    if not query.strip():
+        return "Error: Query cannot be empty."
 
-# سطر صغير عشان نختبر الدالة لوحدها زي ما المهمة طالبة
+    try:
+        # Context manager handles connection setup and teardown
+        with DDGS() as ddgs:
+            # Fetching results as a list to ensure data is captured 
+            # before the session closes
+            raw_results = list(ddgs.text(
+                query, 
+                region='wt-wt', 
+                safesearch='moderate', 
+                max_results=max_results
+            ))
+
+        if not raw_results:
+            return f"No search results found for: '{query}'"
+
+        formatted_output = []
+        for i, res in enumerate(raw_results, 1):
+            title = res.get('title', 'No Title')
+            url = res.get('href', 'No URL')
+            summary = res.get('body', 'No description available.')
+
+            # Building a structured entry for each result
+            entry = (
+                f"Result {i}:\n"
+                f"Title: {title}\n"
+                f"URL: {url}\n"
+                f"Summary: {summary}\n"
+                f"{'-' * 40}"
+            )
+            formatted_output.append(entry)
+
+        return "\n".join(formatted_output)
+
+    except Exception as e:
+        # Catching rate limits or connection issues
+        if "Ratelimit" in str(e):
+            return "Status: Rate limit exceeded. Please wait a moment."
+        return f"Status: Search failed due to an error: {str(e)}"
+
 if __name__ == "__main__":
-    print("جاري التجربة...")
-    print(search_duckduckgo("ما هو الذكاء الاصطناعي؟", max_results=2))
+    print("Initializing search...")
+    # يمكنك تغيير الكلمة المفتاحية هنا للتجربة
+    print(search_duckduckgo("Deep Learning concepts", max_results=3))

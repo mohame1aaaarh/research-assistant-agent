@@ -2,6 +2,6 @@ agno
 chainlit
 google-generativeai
 arxiv
-duckduckgo-search
+ddgs
 pymupdf
 openai

@@ -59,3 +59,36 @@ if __name__ == "__main__":
     print("Testing ArXiv Tool...")
     topic = input("What topic would you like to search for? ")
     print(search_arxiv(topic))
+
+
+###################################################
+
+    from duckduckgo_search import DDGS
+
+def search_duckduckgo(query: str, max_results: int = 5) -> str:
+    """
+    بتبحث في محرك DuckDuckGo وترجع النتائج كنص منسق.
+    """
+    try:
+        with DDGS() as ddgs:
+            # بنسحب النتائج من محرك البحث
+            results = list(ddgs.text(query, max_results=max_results))
+            
+        if not results:
+            return "لم يتم العثور على نتائج."
+            
+        # بننسق النتائج عشان الـ Agent يفهمها (عنوان، رابط، وملخص)
+        formatted_results = []
+        for i, res in enumerate(results, 1):
+            result_text = f"النتيجة {i}:\nالعنوان: {res.get('title')}\nالرابط: {res.get('href')}\nالملخص: {res.get('body')}\n"
+            formatted_results.append(result_text)
+            
+        return "\n".join(formatted_results)
+        
+    except Exception as e:
+        return f"حدث خطأ أثناء البحث: {str(e)}"
+
+# سطر صغير عشان نختبر الدالة لوحدها زي ما المهمة طالبة
+if __name__ == "__main__":
+    print("جاري التجربة...")
+    print(search_duckduckgo("ما هو الذكاء الاصطناعي؟", max_results=2))

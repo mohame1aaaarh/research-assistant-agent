@@ -137,4 +137,5 @@ structured, human-readable output.
 
 if __name__ == "__main__":
     print("Initializing search...")
-    print(search_duckduckgo("Deep Learning concepts", max_results=3))
+    topic = input("What topic would you like to search for? ")
+    print(search_duckduckgo(topic, max_results=3))

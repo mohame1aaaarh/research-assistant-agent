@@ -17,7 +17,7 @@ def search_arxiv(query: str, max_results: int = 3, sort_by=arxiv.SortCriterion.R
     This function interfaces with the ArXiv API to retrieve structured metadata 
     including titles, authors, summaries, and direct links to the papers.
 
-    Args:
+    **Args**:
         query (str): The search term or topic (e.g., "Machine Learning", "CPR").
         max_results (int, optional): Maximum number of results to return. Defaults to 3.
         sort_by (arxiv.SortCriterion, optional): Criterion to sort results. 
@@ -26,11 +26,11 @@ def search_arxiv(query: str, max_results: int = 3, sort_by=arxiv.SortCriterion.R
         sort_order (arxiv.SortOrder, optional): Sorting order. 
             Options: `arxiv.SortOrder.Descending` (default) or `arxiv.SortOrder.Ascending`.
 
-    Returns:
+    **Returns**:
         str: A formatted string containing the title, authors, summary, and link 
             for each discovered paper. Returns an empty message if no results are found.
 
-    Example:
+    **Example**:
         >>> results = search_arxiv("Quantum Computing", max_results=1)
         >>> print(results)
         Title: A Survey on Quantum Computing
@@ -73,17 +73,36 @@ if __name__ == "__main__":
 @tool
 def search_duckduckgo(query: str, max_results: int = 5) -> str:
     """
-    Searches the web using DuckDuckGo and returns a clean, formatted string.
-    Optimized for integration with AI Agents.
-    """
+Searches the web using DuckDuckGo and returns a clean, formatted string.
+
+This function interfaces with the DuckDuckGo Search (DDGS) library to retrieve 
+live web results, optimized for integration with AI Agents by providing 
+structured, human-readable output.
+
+**Args:**
+    query (str): The search term or phrase (e.g., "latest AI news", "Python tutorials").
+    max_results (int, optional): Maximum number of search results to return. 
+        Defaults to 5.
+
+**Returns:**
+    str: A formatted string containing the index, title, URL, and summary 
+        for each discovered result. Returns a specific error message if the 
+        query is empty, no results are found, or a rate limit is triggered.
+
+**Example:**
+    >>> results = search_duckduckgo("Python programming", max_results=1)
+    >>> print(results)
+    Result 1:
+    Title: Welcome to Python.org
+    URL: [https://www.python.org](https://www.python.org)
+    Summary: The official home of the Python Programming Language...
+"""
     if not query.strip():
         return "Error: Query cannot be empty."
 
     try:
-        # Context manager handles connection setup and teardown
         with DDGS() as ddgs:
-            # Fetching results as a list to ensure data is captured 
-            # before the session closes
+
             raw_results = list(ddgs.text(
                 query, 
                 region='wt-wt', 
@@ -100,7 +119,6 @@ def search_duckduckgo(query: str, max_results: int = 5) -> str:
             url = res.get('href', 'No URL')
             summary = res.get('body', 'No description available.')
 
-            # Building a structured entry for each result
             entry = (
                 f"Result {i}:\n"
                 f"Title: {title}\n"
@@ -113,12 +131,10 @@ def search_duckduckgo(query: str, max_results: int = 5) -> str:
         return "\n".join(formatted_output)
 
     except Exception as e:
-        # Catching rate limits or connection issues
         if "Ratelimit" in str(e):
             return "Status: Rate limit exceeded. Please wait a moment."
         return f"Status: Search failed due to an error: {str(e)}"
 
 if __name__ == "__main__":
     print("Initializing search...")
-    # يمكنك تغيير الكلمة المفتاحية هنا للتجربة
     print(search_duckduckgo("Deep Learning concepts", max_results=3))

@@ -33,3 +33,4 @@ async def main(message: cl.Message):
 
     msg.content = current_text.strip()
     await msg.update()
+    

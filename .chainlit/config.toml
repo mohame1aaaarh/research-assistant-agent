@@ -80,7 +80,7 @@ show_readme = true
 language = "en-US"
 favicon = "/public/favicon.png"
 # 🖼️ Assets
-logo_file_url = "/public/logo.png"
+logo_file_url = "/public/favicon.png"
 default_avatar_file_url = "/public/logo.png"
 
 # 🎨 Custom CSS

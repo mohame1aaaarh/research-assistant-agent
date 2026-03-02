@@ -3,7 +3,7 @@ import asyncio
 from agent import get_agent
 
 # إعدادات التحكم
-TYPING_SPEED = 0.02   # كل ما تقل = أسرع
+TYPING_SPEED = 0.005  # كل ما تقل = أسرع
 CURSOR = "▌"
 
 
@@ -17,7 +17,7 @@ async def start():
 async def main(message: cl.Message):
     agent = cl.user_session.get("agent")
 
-    msg = cl.Message(content="🔍I'm thinking...")
+    msg = cl.Message(content="I'm thinking...")
     await msg.send()
 
     response = agent.run(message.content)

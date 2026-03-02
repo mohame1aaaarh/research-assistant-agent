@@ -84,7 +84,7 @@ logo_file_url = "/public/logo.png"
 default_avatar_file_url = "/public/logo.png"
 
 # 🎨 Custom CSS
-#custom_css = "/public/style.css"
+custom_css = "/public/style.css"
 
 # =========================
 # META

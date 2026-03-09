@@ -1,8 +1,22 @@
 # tools/citation_tool.py
+from agno.tools import tool
 
-def generate_apa_citation(title: str, authors: str, year: str, url: str) -> str:
+@tool
+def generate_apa_citation(
+    title: str,
+    year: str,
+    url: str,
+    authors: str = "Unknown Author",
+) -> str:
     """
     Generate APA citation format for academic papers.
+    Always call this tool even if some fields are unknown — use default placeholders.
+    
+    Args:
+        title:   Title of the paper or article.
+        year:    Publication year (e.g. '2024'). Use 'n.d.' if unknown.
+        url:     URL or DOI of the paper.
+        authors: Author(s) in APA format 'LastName, F. M.' Use 'Unknown Author' if not found.
     """
     return f"{authors} ({year}). {title}. Retrieved from {url}"
 

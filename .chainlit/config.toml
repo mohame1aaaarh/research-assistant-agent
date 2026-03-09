@@ -60,7 +60,7 @@ allowed_executables = ["npx", "uvx"]
 [UI]
 
 # 🪪 Branding
-name = "🔬 Logic Lords Research Assistant"
+name = "🔫 Logic Lords Research Assistant"
 description = "AI-powered academic research assistant for search, analysis, and citations"
 
 # 🎨 Layout

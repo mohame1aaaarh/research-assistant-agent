@@ -2,7 +2,7 @@ from agno.agent import Agent
 from agno.models.openai.like import OpenAILike
 from config import OPENROUTER_KEY
 from tools.search_tool import search_arxiv, search_duckduckgo
-
+from tools.citation_tool import generate_apa_citation,add_sources_section
 
 def get_agent():
     return Agent(  
@@ -11,7 +11,7 @@ def get_agent():
             api_key=OPENROUTER_KEY,
             base_url="https://openrouter.ai/api/v1",
         ),
-        tools=[search_arxiv, search_duckduckgo],
+        tools=[search_arxiv, search_duckduckgo,generate_apa_citation,add_sources_section],
         markdown=True,
 
 
@@ -57,7 +57,7 @@ RULES
 - Make Explanation clear and educational.
 - If unsure, say it clearly.
 - Consider questions about programming, science, data, AI, or analysis as research queries.
-
+-Always call generate_apa_citation even if some fields are unknown, use 'Unknown' as placeholder
 ====================
 STYLE
 ====================

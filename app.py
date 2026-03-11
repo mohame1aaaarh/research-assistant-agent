@@ -1,11 +1,19 @@
 import chainlit as cl
+from database.auth import login_user
 import asyncio
 from agent import get_agent
+import config
 
 # إعدادات التحكم
 TYPING_SPEED = 0.005  # كل ما تقل = أسرع
 CURSOR = "▌"
-
+@cl.password_auth_callback
+def auth_callback(username:str,password:str):
+    result=login_user(username,password)
+    if result["success"]:
+        user = result["user"]
+        return cl.User(identifier=username,metadata={"user_id":user["id"]})
+    return None
 
 @cl.on_chat_start
 async def start():

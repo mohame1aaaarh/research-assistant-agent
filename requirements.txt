@@ -5,3 +5,4 @@ arxiv
 ddgs
 pymupdf
 openai
+bcrypt

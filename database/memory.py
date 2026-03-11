@@ -11,69 +11,120 @@ sys.path.insert(0, str(project_root))
 
 from config import DATABASE_PATH
 
-def init_db():#هنا بنشيك اذا كان في ملف قاعدة بيانات ولا لا لو ماكانش بننشئ واحد جديد وبعدين بننشئ جدول للجلسات وجدول للرسائل
+def init_db():
     os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
     conn = sq.connect(DATABASE_PATH)
     cursor = conn.cursor()
+
+    # ── 1. المستخدمين ──────────────────────────────
     cursor.execute('''
-                CREATE TABLE IF NOT EXISTS sessions (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    title TEXT default "محادثه جديده"
-                )
-            ''')
-    
+        CREATE TABLE IF NOT EXISTS users (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            username   TEXT    NOT NULL UNIQUE,
+            password   TEXT    NOT NULL,
+            created_at TEXT    NOT NULL
+        )
+    ''')
+
+    # ── 2. الجلسات ─────────────────────────────────
     cursor.execute('''
-                CREATE TABLE IF NOT EXISTS messages (
-                    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                    session_id INTEGER NOT NULL,
-                    role       TEXT    NOT NULL,
-                    content    TEXT    NOT NULL,
-                    sources    TEXT    DEFAULT NULL,
-                    created_at TEXT    NOT NULL,
-                    FOREIGN KEY (session_id) REFERENCES sessions(id)
-                     ) 
-                   ''')
-    
+        CREATE TABLE IF NOT EXISTS sessions (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER NOT NULL,
+            title      TEXT    DEFAULT "محادثة جديدة",
+            start_time TEXT    NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # ── 3. الرسائل ─────────────────────────────────
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS files (
-        id             INTEGER PRIMARY KEY AUTOINCREMENT,
-        session_id     INTEGER NOT NULL,
-        file_name      TEXT    NOT NULL,
-        file_path      TEXT    NOT NULL,
-        extracted_text TEXT    DEFAULT NULL,
-        uploaded_at    TEXT    NOT NULL,
-        FOREIGN KEY (session_id) REFERENCES sessions(id)
-    )
-''')
+        CREATE TABLE IF NOT EXISTS messages (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER NOT NULL,
+            role       TEXT    NOT NULL,
+            content    TEXT    NOT NULL,
+            sources    TEXT    DEFAULT NULL,
+            created_at TEXT    NOT NULL,
+            FOREIGN KEY (session_id) REFERENCES sessions(id)
+        )
+    ''')
+
+    # ── 4. الملفات ─────────────────────────────────
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS files (
+            id             INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id     INTEGER NOT NULL,
+            file_name      TEXT    NOT NULL,
+            file_path      TEXT    NOT NULL,
+            extracted_text TEXT    DEFAULT NULL,
+            uploaded_at    TEXT    NOT NULL,
+            FOREIGN KEY (session_id) REFERENCES sessions(id)
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
-def create_session(title="محادثة جديدة"):#هنا بننشئ جلسة جديدة في قاعدة البيانات وبنرجع ال id بتاعها عشان نستخدمه في تخزين الرسائل الخاصة بيها
+def create_session(user_id: int, title="محادثة جديدة"):
+
     conn = sq.connect(DATABASE_PATH)
     cursor = conn.cursor()
-
     cursor.execute("""
-        INSERT INTO sessions (title, start_time)
-        VALUES (?, ?)
-    """, (title, datetime.now().isoformat()))
-
+        INSERT INTO sessions (user_id, title, start_time)
+        VALUES (?, ?, ?)
+    """, (user_id, title, datetime.now().isoformat()))
     session_id = cursor.lastrowid
     conn.commit()
     conn.close()
-
     return session_id
 
-
-def get_all_sessions():#هنا بنجيب كل الجلسات اللي موجودة في قاعدة البيانات وبنرتبها حسب تاريخ الانشاء من الاحدث للاقدم وبنرجعها في شكل قائمة من القواميس
+def create_user(username: str, hashed_password: str) -> int:
+    # بتعمل مستخدم جديد وبترجع الـ id بتاعه
     conn = sq.connect(DATABASE_PATH)
     cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO users (username, password, created_at)
+        VALUES (?, ?, ?)
+    """, (username, hashed_password, datetime.now().isoformat()))
+    user_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return user_id
 
+
+def get_user(username: str) -> dict:
+    # بتجيب بيانات مستخدم عن طريق اسمه
+    conn = sq.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, username, password
+        FROM users
+        WHERE username = ?
+    """, (username,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return {"id": row[0], "username": row[1], "password": row[2]}
+    return None
+
+
+def get_user_sessions(user_id: int) -> list:
+    # بتجيب كل جلسات مستخدم معين بس
+    conn = sq.connect(DATABASE_PATH)
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT id, title, start_time
         FROM sessions
+        WHERE user_id = ?
         ORDER BY start_time DESC
-    """)
+    """, (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [
+        {"id": row[0], "title": row[1], "start_time": row[2]}
+        for row in rows
+    ]
 
     rows = cursor.fetchall()
     conn.close()
@@ -86,6 +137,7 @@ def get_all_sessions():#هنا بنجيب كل الجلسات اللي موجو�
     ]
 
 def save_message(session_id, role, content, sources=None):#هنا بنخزن رسالة جديدة في قاعدة البيانات مع ربطها بالجلسة المناسبة عن طريق ال session_id وبنخزن الدور والمحتوى والمصادر والتاريخ والوقت اللي اتخزنت فيه الرسالة
+   
     conn = sq.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
@@ -98,6 +150,7 @@ def save_message(session_id, role, content, sources=None):#هنا بنخزن ر�
     conn.close()
 
 def save_file(session_id, file_name, file_path, extracted_text=None):#هنا بنخزن ملف جديد في قاعدة البيانات مع ربطه بالجلسة المناسبة عن طريق ال session_id وبنخزن اسم الملف ومساره والنص المستخرج منه (لو موجود) والتاريخ والوقت اللي اتخزن فيه الملف
+ 
     # بنحفظ الملف في جدول files
     conn = sq.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -113,7 +166,7 @@ def save_file(session_id, file_name, file_path, extracted_text=None):#هنا ب�
 
     # بعد ما حفظنا الملف، بنحفظ في messages إشارة إنه موجود في المحادثة
     # content بيكون JSON فيه الـ file_id والاسم عشان نعرف نرجعه
-    import json
+
     file_reference = json.dumps({"file_id": file_id, "name": file_name}, ensure_ascii=False)
     save_message(session_id, role="file", content=file_reference)
 
@@ -121,6 +174,7 @@ def save_file(session_id, file_name, file_path, extracted_text=None):#هنا ب�
     
 
 def get_session_messages(session_id):#هنا بنجيب كل الرسائل اللي مرتبطة بجلسة معينة عن طريق ال session_id وبنرتبها حسب تاريخ الانشاء من الاقدم للاحدث وبنرجعها في شكل قائمة من القواميس
+
     conn = sq.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
@@ -146,6 +200,7 @@ def get_session_messages(session_id):#هنا بنجيب كل الرسائل ال
 
 def get_session_files(session_id):
     # بنجيب كل الملفات المرتبطة بجلسة معينة
+
     conn = sq.connect(DATABASE_PATH)
     cursor = conn.cursor()
 

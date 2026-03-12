@@ -6,3 +6,4 @@ ddgs
 pymupdf
 openai
 bcrypt
+requests

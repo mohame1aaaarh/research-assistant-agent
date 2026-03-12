@@ -1,0 +1,33 @@
+/* استبدال لوجو Chainlit */
+img[alt="logo"].logo,
+img.logo,
+img[src*="/logo?"] {
+    content: url("/public/logo.png") !important;
+    width: 150px !important;
+}
+
+/* إخفاء اللوجو من فوق اليسار */
+.flex.justify-center.gap-2 {
+    display: none !important;
+}
+
+/* إضافة اللوجو فوق الفورم */
+.flex.flex-1.items-center.justify-center {
+    flex-direction: column !important;
+}
+
+.flex.flex-1.items-center.justify-center::before {
+    content: "" !important;
+    background-image: url("/public/logo.png") !important;
+    background-repeat: no-repeat !important;
+    background-size: contain !important;
+    background-position: center !important;
+    width: 150px !important;
+    height: 80px !important;
+    display: block !important;
+    margin-bottom: 20px !important;
+}
+/* إخفاء زرار تغيير الثيم */
+#theme-toggle {
+    display: none !important;
+}

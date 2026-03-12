@@ -1,14 +1,35 @@
-# Welcome to Chainlit! 🚀🤖
+# 🤖 Research Assistant Agent
+### مشروع مساعد البحث الذكي — فريق Logic Lords 🚀
 
-Hi there, Developer! 👋 We're excited to have you on board. Chainlit is a powerful tool designed to help you prototype, debug and share applications built on top of LLMs.
+مرحباً بك! هذا النظام مصمم ليكون مساعدك الأكاديمي الشخصي، حيث يساعدك على البحث في الأوراق العلمية وتلخيصها بسرعة ودقة مع ذكر المصادر.
 
-## Useful Links 🔗
+---
 
-- **Documentation:** Get started with our comprehensive [Chainlit Documentation](https://docs.chainlit.io) 📚
-- **Discord Community:** Join our friendly [Chainlit Discord](https://discord.gg/k73SQ3FyUh) to ask questions, share your projects, and connect with other developers! 💬
+## ✨ ماذا يمكنني أن أفعل لك؟
 
-We can't wait to see what you create with Chainlit! Happy coding! 💻😊
+| الميزة | الوصف |
+|---|---|
+| 🔍 **بحث أكاديمي** | أبحث لك في ArXiv و Semantic Scholar و DuckDuckGo. |
+| 📄 **تحليل ملفات PDF** | يمكنك رفع أي ورقة بحثية وسأقوم بالإجابة على أسئلتك حولها. |
+| 📝 **تلخيص فوري** | تلخيص الأوراق البحثية الطويلة في نقاط مركزة. |
+| 📍 **توثيق المصادر** | كل إجابة أقدمها ستتضمن المصدر ورابط الورقة البحثية. |
+| 🌐 **دعم كامل** | أتحدث وأفهم اللغتين العربية والإنجليزية بطلاقة. |
 
-## Welcome screen
+---
 
-To modify the welcome screen, edit the `chainlit.md` file at the root of your project. If you do not want a welcome screen, just leave this file empty.
+## 🛠 كيف تبدأ؟
+
+1. **اسأل سؤالاً مباشراً:** ابحث عن موضوع معين (مثلاً: "ما هي أحدث أبحاث الـ Generative AI؟").
+2. **ارفع ملفاً:** استخدم أيقونة المشبك 📎 لرفع ملف PDF واطلب مني تلخيصه أو استخراج معلومات منه.
+3. **تصفح المصادر:** اضغط على الروابط المرفقة مع الإجابات للوصول للأوراق البحثية الأصلية.
+
+---
+
+## 🧠 التقنيات المستخدمة
+تم بناء هذا المشروع باستخدام أحدث تقنيات الذكاء الاصطناعي:
+* **Agno:** لإدارة وكيل الذكاء الاصطناعي (Agent).
+* **Gemini Flash:** كنموذج لغوي كبير للفهم والتحليل.
+* **Chainlit:** لواجهة المستخدم التفاعلية.
+
+---
+> **ملاحظة:** هذا المشروع تم تطويره بواسطة فريق **Logic Lords** كجزء من مشروع بحثي متكامل.

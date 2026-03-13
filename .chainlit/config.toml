@@ -58,7 +58,7 @@ allowed_executables = ["npx", "uvx"]
 [UI]
 name = "Logic Lords Research Assistant"
 description = "AI-powered academic research assistant for search, analysis, and citations"
-default_theme = "dark"
+default_theme = "light"
 layout = "wide"
 default_sidebar_state = "open"
 cot = "tool_call"

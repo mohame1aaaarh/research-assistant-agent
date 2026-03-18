@@ -96,9 +96,6 @@ async def main(message: cl.Message):
 
     msg.content = current_text.strip()
     await msg.update()
-<<<<<<< HEAD
-    
-=======
 
 @cl.on_chat_resume
 async def resume(thread):
@@ -119,4 +116,3 @@ async def resume(thread):
     agent = get_agent()
     cl.user_session.set("agent", agent)
     cl.user_session.set("session_id", int(session_id))
->>>>>>> 5679fdcb267c759211694be23a09476a3c63931b

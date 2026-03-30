@@ -65,9 +65,15 @@ cot = "tool_call"
 confirm_new_chat = true
 alert_style = "classic"
 language = "en-US"
+<<<<<<< HEAD
+favicon = "/public/favicon.png"
+# 🖼️ Assets
+logo_file_url = "/public/favicon.png"
+=======
 logo_file_url = "/public/logo.png"
 login_page_image = "/public/logo.png"
 favicon = "/public/logo.png"
+>>>>>>> 5679fdcb267c759211694be23a09476a3c63931b
 default_avatar_file_url = "/public/logo.png"
 custom_css = "/public/style.css"
 

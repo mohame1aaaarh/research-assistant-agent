@@ -1,6 +1,8 @@
-agno
 chainlit
-google-generativeai
-arxiv
+agno
 duckduckgo-search
-pymupdf
+arxiv
+requests
+bcrypt
+pypdf
+google-genai

@@ -1,13 +1,13 @@
 from chainlit.data.base import BaseDataLayer
 from chainlit.types import PageInfo, ThreadDict, PaginatedResponse
 import chainlit as cl
-from database.memory import get_user_sessions, get_session_messages, get_user_by_id, get_thread_author as get_author
+from database.memory import get_user_sessions, get_session_messages, get_user_by_id
+from database.memory import get_thread_author as get_author
 from database.auth import get_user
 import sqlite3 as sq
 import sys
 sys.path.insert(0, ".")
 from config import DATABASE_PATH
-from database.memory import get_thread_author as get_author, get_user_by_id
 
 
 class SQLiteDataLayer(BaseDataLayer):
@@ -27,13 +27,20 @@ class SQLiteDataLayer(BaseDataLayer):
 
     async def list_threads(self, pagination, filters):
         user_id = filters.userId
-        db_user = get_user_by_id(int(user_id))
+
+        try:
+            uid = int(user_id)
+        except (ValueError, TypeError):
+            return PaginatedResponse(
+                pageInfo=PageInfo(hasNextPage=False, startCursor=None, endCursor=None),
+                data=[])
+
+        db_user = get_user_by_id(uid)
 
         if not db_user:
             return PaginatedResponse(
                 pageInfo=PageInfo(hasNextPage=False, startCursor=None, endCursor=None),
-                data=[]
-            )
+                data=[])
 
         sessions = get_user_sessions(db_user["id"])
         threads = []
@@ -55,40 +62,40 @@ class SQLiteDataLayer(BaseDataLayer):
         )
 
     async def get_thread(self, thread_id: str):
+        try:
+            tid = int(thread_id)
+        except (ValueError, TypeError):
+            return None  # ← Chainlit handles None gracefully for new threads
 
+        # جيب الـ username صاحب الـ thread
+        author = get_author(tid)
 
-    # جيب الـ username صاحب الـ thread
-     author = get_author(int(thread_id))
+        messages = get_session_messages(tid)
+        steps = []
+        for msg in messages:
+            if msg["role"] in ("user", "assistant"):
+                steps.append({
+                    "id": msg["created_at"],
+                    "threadId": thread_id,
+                    "type": "user_message" if msg["role"] == "user" else "assistant_message",
+                    "output": msg["content"],
+                    "createdAt": msg["created_at"]
+                })
 
-     messages = get_session_messages(int(thread_id))
-     steps = []
-     for msg in messages:
-        if msg["role"] in ("user", "assistant"):
-            steps.append({
-                "id": msg["created_at"],
-                "threadId": thread_id,
-                "type": "user_message" if msg["role"] == "user" else "assistant_message",
-                "output": msg["content"],
-                "createdAt": msg["created_at"]
-            })
+        # جيب الـ user_id
+        db_user = get_user(author)
+        user_id = str(db_user["id"]) if db_user else ""
 
-    # جيب الـ user_id
-     from database.auth import get_user
-     db_user = get_user(author)
-     user_id = str(db_user["id"]) if db_user else ""
-
-     print(f"get_thread: thread_id={thread_id}, author={author}, user_id={user_id}")  # مؤقت
-
-     return ThreadDict(
-        id=thread_id,
-        name="محادثة",
-        createdAt="",
-        userId=user_id,           # ← مش فاضي
-        userIdentifier=author,    # ← مش فاضي
-        metadata={},
-        steps=steps,
-        elements=[]
-     )
+        return ThreadDict(
+            id=thread_id,
+            name="محادثة",
+            createdAt="",
+            userId=user_id,           # ← مش فاضي
+            userIdentifier=author,    # ← مش فاضي
+            metadata={},
+            steps=steps,
+            elements=[]
+        )
 
     async def update_thread(self, thread_id, name=None, user_id=None,
                             metadata=None, tags=None):
@@ -108,11 +115,10 @@ class SQLiteDataLayer(BaseDataLayer):
 
     async def get_thread_author(self, thread_id: str):
         try:
-            author = get_author(int(thread_id))
-            print(f"thread_id: {thread_id}, author: {author}")  # ← مؤقت
-            return author
+            return get_author(int(thread_id))
+        except (ValueError, TypeError):
+            return ""
         except Exception as e:
-            print(f"get_thread_author error: {e}")
             return ""
 
     async def upsert_feedback(self, feedback):

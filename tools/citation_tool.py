@@ -21,16 +21,15 @@ class SourceType(str, Enum):
     REPORT     = "report"
 
 
-CURRENT_YEAR = datetime.now().year
+CURRENT_YEAR  = datetime.now().year
 VALID_YEAR_RE = re.compile(r"^\d{4}$")
 
 
 # ─────────────────────────────────────────────
-#  Internal Helpers  (not exposed to the agent)
+#  Internal Helpers  (never exposed to the agent)
 # ─────────────────────────────────────────────
 
 def _validate_year(year: str) -> str:
-    """Return the year if valid, else 'n.d.'"""
     if not year or year.strip().lower() in ("n.d.", "nd", "unknown", ""):
         return "n.d."
     year = year.strip()
@@ -42,16 +41,9 @@ def _validate_year(year: str) -> str:
 
 
 def _normalize_authors(authors: str) -> str:
-    """
-    Normalize author string to APA format.
-    Accepts  'John Smith'  →  'Smith, J.'
-    Accepts  'Smith, J.'  →  'Smith, J.'   (already correct, kept as-is)
-    Multiple authors separated by ';' or '&' or 'and'.
-    """
     if not authors or authors.strip().lower() in ("unknown", "unknown author", ""):
         return "Unknown Author"
 
-    # Split multiple authors
     raw_authors = re.split(r"\s*(?:;|&|and)\s*", authors, flags=re.IGNORECASE)
     normalized: list[str] = []
 
@@ -59,25 +51,19 @@ def _normalize_authors(authors: str) -> str:
         author = author.strip()
         if not author:
             continue
-
-        # Already in "LastName, F." format
         if re.match(r"^[A-Za-z\-']+,\s+[A-Z]\.", author):
             normalized.append(author)
             continue
-
-        # "FirstName LastName" → "LastName, F."
         parts = author.split()
         if len(parts) >= 2:
-            last   = parts[-1]
+            last     = parts[-1]
             initials = ". ".join(p[0].upper() for p in parts[:-1]) + "."
             normalized.append(f"{last}, {initials}")
         else:
-            normalized.append(author)  # single-word name, keep as-is
+            normalized.append(author)
 
     if not normalized:
         return "Unknown Author"
-
-    # APA multi-author: A, B, & C
     if len(normalized) == 1:
         return normalized[0]
     if len(normalized) == 2:
@@ -86,19 +72,18 @@ def _normalize_authors(authors: str) -> str:
 
 
 def _clean_url(url: str) -> str:
-    """Return the URL/DOI cleaned and prefixed if needed."""
     url = url.strip()
-    if url.startswith("10."):          # raw DOI
+    if url.startswith("10."):
         return f"https://doi.org/{url}"
     return url
 
 
 # ─────────────────────────────────────────────
-#  Agent Tools
+#  Core Logic — plain function, no @tool
+#  Both tools call this instead of each other.
 # ─────────────────────────────────────────────
 
-@tool
-def generate_apa_citation(
+def _build_apa_citation(
     title: str,
     year: str,
     url: str,
@@ -111,29 +96,7 @@ def generate_apa_citation(
     publisher: Optional[str] = None,
     access_date: Optional[str] = None,
 ) -> str:
-    """
-    Generate a properly formatted APA 7th-edition citation.
-    Always call this tool even when some fields are missing — use the provided defaults.
-
-    Args:
-        title:        Title of the source (required).
-        year:         Publication year e.g. '2024'. Use 'n.d.' if unknown.
-        url:          Full URL or DOI (e.g. '10.1000/xyz123').
-        authors:      Author(s). Accepts 'John Smith', 'Smith, J.', or multiple
-                      authors separated by ';' or '&'. Default: 'Unknown Author'.
-        source_type:  One of 'website' | 'journal' | 'book' | 'conference' | 'report'.
-                      Default: 'website'.
-        journal_name: Journal name (for source_type='journal').
-        volume:       Volume number (journals/books).
-        issue:        Issue number (journals).
-        pages:        Page range e.g. '123-145' (journals/books).
-        publisher:    Publisher name (books/reports).
-        access_date:  Date you retrieved the page e.g. 'March 10, 2025' (websites).
-    
-    Returns:
-        A formatted APA 7th-edition citation string.
-    """
-    # ── Sanitize inputs ──────────────────────
+    """Pure function — builds an APA citation string, no Agno dependency."""
     clean_title   = title.strip() if title else "Untitled"
     clean_year    = _validate_year(year)
     clean_authors = _normalize_authors(authors)
@@ -144,7 +107,6 @@ def generate_apa_citation(
     except ValueError:
         stype = SourceType.WEBSITE
 
-    # ── Build citation by type ────────────────
     if stype == SourceType.JOURNAL:
         citation = f"{clean_authors} ({clean_year}). {clean_title}."
         if journal_name:
@@ -168,7 +130,7 @@ def generate_apa_citation(
 
     elif stype == SourceType.CONFERENCE:
         citation = f"{clean_authors} ({clean_year}). {clean_title}."
-        if journal_name:   # reused as conference name
+        if journal_name:
             citation += f" In *{journal_name.strip()}*"
             if pages:
                 citation += f" (pp. {pages})"
@@ -185,49 +147,98 @@ def generate_apa_citation(
         if clean_url:
             citation += f" {clean_url}"
 
-    else:  # WEBSITE (default)
-        retrieval = f"Retrieved {access_date} from {clean_url}" if access_date else f"Retrieved from {clean_url}"
-        citation  = f"{clean_authors} ({clean_year}). {clean_title}. {retrieval}"
+    else:  # WEBSITE
+        retrieval = (
+            f"Retrieved {access_date} from {clean_url}"
+            if access_date
+            else f"Retrieved from {clean_url}"
+        )
+        citation = f"{clean_authors} ({clean_year}). {clean_title}. {retrieval}"
 
     return citation.strip()
+
+
+# ─────────────────────────────────────────────
+#  Agent Tools  — @tool wrappers only, no logic
+# ─────────────────────────────────────────────
+
+@tool
+def generate_apa_citation(
+    title: str,
+    year: str,
+    url: str,
+    authors: str = "Unknown Author",
+    source_type: str = "website",
+    journal_name: Optional[str] = None,
+    volume: Optional[str] = None,
+    issue: Optional[str] = None,
+    pages: Optional[str] = None,
+    publisher: Optional[str] = None,
+    access_date: Optional[str] = None,
+) -> str:
+    """
+    Generate a properly formatted APA 7th-edition citation for a single source.
+    Use this when citing exactly one source.
+
+    Args:
+        title:        Title of the source (required).
+        year:         Publication year e.g. '2024'. Use 'n.d.' if unknown.
+        url:          Full URL or DOI (e.g. '10.1000/xyz123').
+        authors:      Author(s). Accepts 'John Smith', 'Smith, J.', or multiple
+                      authors separated by ';' or '&'. Default: 'Unknown Author'.
+        source_type:  One of 'website' | 'journal' | 'book' | 'conference' | 'report'.
+        journal_name: Journal or conference name.
+        volume:       Volume number.
+        issue:        Issue number.
+        pages:        Page range e.g. '123-145'.
+        publisher:    Publisher name (books/reports).
+        access_date:  Retrieval date e.g. 'March 10, 2025' (websites only).
+
+    Returns:
+        A formatted APA 7th-edition citation string.
+    """
+    return _build_apa_citation(
+        title=title, year=year, url=url, authors=authors,
+        source_type=source_type, journal_name=journal_name,
+        volume=volume, issue=issue, pages=pages,
+        publisher=publisher, access_date=access_date,
+    )
 
 
 @tool
 def generate_multiple_citations(sources: list[dict]) -> list[str]:
     """
-    Generate APA citations for a list of sources in one call.
-    Prefer this over calling generate_apa_citation multiple times.
+    Generate APA citations for multiple sources in one call.
+    Always prefer this over calling generate_apa_citation repeatedly.
 
     Args:
-        sources: List of dicts. Each dict can have the same keys as
-                 generate_apa_citation: title, year, url, authors,
-                 source_type, journal_name, volume, issue, pages,
-                 publisher, access_date.
+        sources: List of dicts. Each dict can have:
+                 title, year, url, authors, source_type,
+                 journal_name, volume, issue, pages, publisher, access_date.
 
     Returns:
         A list of formatted APA citation strings, one per source.
     """
-    results: list[str] = []
-    for src in sources:
-        citation = generate_apa_citation(
-            title       = src.get("title", "Untitled"),
-            year        = src.get("year", "n.d."),
-            url         = src.get("url", ""),
-            authors     = src.get("authors", "Unknown Author"),
-            source_type = src.get("source_type", "website"),
-            journal_name= src.get("journal_name"),
-            volume      = src.get("volume"),
-            issue       = src.get("issue"),
-            pages       = src.get("pages"),
-            publisher   = src.get("publisher"),
-            access_date = src.get("access_date"),
+    return [
+        _build_apa_citation(
+            title        = src.get("title", "Untitled"),
+            year         = src.get("year", "n.d."),
+            url          = src.get("url", ""),
+            authors      = src.get("authors", "Unknown Author"),
+            source_type  = src.get("source_type", "website"),
+            journal_name = src.get("journal_name"),
+            volume       = src.get("volume"),
+            issue        = src.get("issue"),
+            pages        = src.get("pages"),
+            publisher    = src.get("publisher"),
+            access_date  = src.get("access_date"),
         )
-        results.append(citation)
-    return results
+        for src in sources
+    ]
 
 
 # ─────────────────────────────────────────────
-#  Post-processing Helper  (human-side, not an agent tool)
+#  Post-processing Helper  (app-side, not an agent tool)
 # ─────────────────────────────────────────────
 
 def add_sources_section(
@@ -238,12 +249,12 @@ def add_sources_section(
     heading: str = "🔗 Sources",
 ) -> str:
     """
-    Append a formatted sources / references section to the agent's response.
+    Append a formatted references section to the agent's response text.
 
     Args:
         response_text:       The main response body.
         citations:           List of APA citation strings.
-        sort_alphabetically: Sort citations A→Z (default True, matches APA).
+        sort_alphabetically: Sort A→Z (default True, matches APA style).
         heading:             Section heading text.
 
     Returns:
@@ -257,7 +268,6 @@ def add_sources_section(
     if sort_alphabetically:
         cleaned.sort(key=lambda c: c.lower())
 
-    # Deduplicate while preserving order
     seen: set[str] = set()
     unique: list[str] = []
     for c in cleaned:

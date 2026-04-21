@@ -8,12 +8,13 @@ from database.data_layer import SQLiteDataLayer
 import requests
 
 def generate_title(user_message: str) -> str:
+    """Generate a short title using OpenRouter API."""
     try:
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={"Authorization": f"Bearer {config.OPENROUTER_KEY}"},
             json={
-                "model": "arcee-ai/trinity-large-preview:free",
+                "model": "meta-llama/llama-3.1-8b-instruct:free",
                 "messages": [
                     {
                         "role": "user",
@@ -55,7 +56,7 @@ async def start():
 
     agent = get_agent()
     cl.user_session.set("agent", agent)
-    await cl.Message(content="Hello, I'm your research assistant!").send()
+    await cl.Message(content="مرحباً! أنا مساعدك البحثي 🔬 اسألني أي سؤال بحثي وسأبحث لك في الأوراق العلمية والمصادر الموثوقة.").send()
 
 @cl.on_message
 async def main(message: cl.Message):
@@ -67,17 +68,24 @@ async def main(message: cl.Message):
         user_id = cl.user_session.get("user_id")
         session_id = create_session(user_id=user_id)
         cl.user_session.set("session_id", session_id)
-     # ← ولّد العنوان في background من غير ما يأخر الرد
-    import asyncio
+
+    # ← ولّد العنوان في background من غير ما يأخر الرد
     from database.memory import update_session_title
     loop = asyncio.get_event_loop()
     loop.run_in_executor(None, lambda: update_session_title(session_id, generate_title(message.content)))
 
     save_message(session_id=session_id, role="user", content=message.content)
-    msg = cl.Message(content="I'm thinking...")
+
+    # أرسل رسالة مؤقتة بتأثير "جاري التفكير"
+    msg = cl.Message(content="⏳ جاري البحث والتحليل...")
     await msg.send()
 
-    response = agent.run(message.content)
+    # ← شغّل الـ agent في thread منفصل عشان ما يقفلش الـ event loop
+    # ده بيمنع رسالة "لا نستطيع الوصول للسيرفر"
+    response = await asyncio.get_event_loop().run_in_executor(
+        None, lambda: agent.run(message.content)
+    )
+
     if hasattr(response, "content") and response.content:
         full_text = response.content
     elif hasattr(response, "messages") and response.messages:
@@ -87,6 +95,7 @@ async def main(message: cl.Message):
 
     save_message(session_id=session_id, role="assistant", content=full_text)
 
+    # تأثير الكتابة التدريجي
     current_text = ""
     for char in full_text:
         current_text += char
@@ -115,4 +124,7 @@ async def resume(thread):
 
     agent = get_agent()
     cl.user_session.set("agent", agent)
-    cl.user_session.set("session_id", int(session_id))
+    try:
+        cl.user_session.set("session_id", int(session_id))
+    except (ValueError, TypeError):
+        cl.user_session.set("session_id", session_id)  # keep as string

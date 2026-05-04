@@ -1,5 +1,5 @@
 import os
-with open(r'C:\Users\LENOVO\Desktop\Api Key.txt', 'r') as file:
+with open(r'"C:\Users\LENOVO\Desktop\Api Key.txt"', 'r') as file:
     api_key = file.read()
     
 OPENROUTER_KEY: str = api_key

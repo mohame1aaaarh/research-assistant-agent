@@ -1,7 +1,7 @@
 import os
-OPENROUTER_KEY: str = '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
-
-'
+    api_key = file.read()
+    
+OPENROUTER_KEY: str = api_key
 APP_NAME: str = "Research Assistant Agent"
 DATABASE_PATH: str = "database/conversations.db"
 MAX_SEARCH_RESULTS: int = 5

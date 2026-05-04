@@ -11,7 +11,7 @@ from tools.citation_tool import (
 def get_agent():
     return Agent(
         model=OpenAILike(
-            id="meta-llama/llama-3.1-8b-instruct:free",
+            id="nvidia/llama-3.1-nemotron-70b-instruct:free,
             api_key=OPENROUTER_KEY,
             base_url="https://openrouter.ai/api/v1",
         ),
@@ -19,10 +19,10 @@ def get_agent():
             search_arxiv,
             search_duckduckgo,
             generate_apa_citation,
-            generate_multiple_citations,
+            generate_multiple_citations,  # ← جديد
         ],
         markdown=True,
-        instructions="""
+       instructions="""
 ====================
 IDENTITY & ROLE
 ====================

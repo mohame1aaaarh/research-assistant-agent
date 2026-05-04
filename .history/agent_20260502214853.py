@@ -11,10 +11,9 @@ from tools.citation_tool import (
 def get_agent():
     return Agent(
         model=OpenAILike(
-            id="arcee-ai/trinity-large-preview:free",
+            id="nvidia/llama-3.1-nemotron-70b-instruct:free",
             api_key=OPENROUTER_KEY,
-            # base_url="https://openrouter.ai/api/v1",
-            base_url="https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b:free",
+            base_url="https://openrouter.ai/api/v1",
         ),
         tools=[
             search_arxiv,

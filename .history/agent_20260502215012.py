@@ -10,8 +10,8 @@ from tools.citation_tool import (
 
 def get_agent():
     return Agent(
-        model=OpenAILike(
-            id="meta-llama/llama-3.1-8b-instruct:free",
+        model=OpenAILike( # تأكد من استخدام كلاس النموذج الصحيح داخل Agent
+            id="nvidia/llama-3.1-nemotron-70b-instruct:free",
             api_key=OPENROUTER_KEY,
             base_url="https://openrouter.ai/api/v1",
         ),

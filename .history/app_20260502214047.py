@@ -13,7 +13,7 @@ def generate_title(user_message: str) -> str:
             "https://openrouter.ai/api/v1/chat/completions",
             headers={"Authorization": f"Bearer {config.OPENROUTER_KEY}"},
             json={
-                "model": "nvidia/nemotron-3-super-120b-a12b:free",
+                ""model": "arcee-ai/trinity-large-preview,
                 "messages": [
                     {
                         "role": "user",

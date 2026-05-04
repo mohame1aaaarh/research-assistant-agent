@@ -10,12 +10,10 @@ from tools.citation_tool import (
 
 def get_agent():
     return Agent(
-        model=OpenAILike(
-            id="arcee-ai/trinity-large-preview:free",
-            api_key=OPENROUTER_KEY,
-            # base_url="https://openrouter.ai/api/v1",
-            base_url="",
-        ),
+        model_id="nvidia/llama-3.1-nemotron-70b-instruct:free", # أضف :free إذا كنت تستخدم النسخة المجانية
+    api_key=OPENROUTER_KEY,
+    base_url="https://openrouter.ai/api/v1",
+),
         tools=[
             search_arxiv,
             search_duckduckgo,

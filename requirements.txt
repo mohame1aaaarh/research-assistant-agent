@@ -1,5 +1,6 @@
 chainlit
 agno
+openai
 duckduckgo-search
 arxiv
 requests

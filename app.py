@@ -47,9 +47,15 @@ def auth_callback(username: str, password: str):
 @cl.on_chat_start
 async def start():
     user = cl.user_session.get("user")
-    from database.memory import get_user
-    db_user = get_user(user.identifier)
-    user_id = db_user["id"]
+    user_id = 1  # Default fallback user ID
+    
+    if user and hasattr(user, "identifier"):
+        from database.memory import get_user
+        db_user = get_user(user.identifier)
+        if db_user:
+            user_id = db_user["id"]
+        elif user.metadata and "user_id" in user.metadata:
+            user_id = user.metadata["user_id"]
 
     cl.user_session.set("user_id", user_id)
     cl.user_session.set("session_id", None)  # ← مش بنعمل session هنا
@@ -74,6 +80,25 @@ async def main(message: cl.Message):
     loop = asyncio.get_event_loop()
     loop.run_in_executor(None, lambda: update_session_title(session_id, generate_title(message.content)))
 
+    # Process PDF files attached to the message
+    pdf_context = ""
+    if message.elements:
+        import pypdf
+        for element in message.elements:
+            if element.mime == "application/pdf" or element.name.endswith(".pdf"):
+                try:
+                    reader = pypdf.PdfReader(element.path)
+                    for page in reader.pages:
+                        extracted = page.extract_text()
+                        if extracted:
+                            pdf_context += extracted + "\n"
+                except Exception as e:
+                    await cl.Message(content=f"⚠️ تعذر قراءة ملف PDF ({element.name}): {e}").send()
+    
+    final_query = message.content
+    if pdf_context:
+        final_query += f"\n\n[محتوى ملف PDF المرفق]:\n{pdf_context[:25000]}"
+
     save_message(session_id=session_id, role="user", content=message.content)
 
     # أرسل رسالة مؤقتة بتأثير "جاري التفكير"
@@ -81,9 +106,8 @@ async def main(message: cl.Message):
     await msg.send()
 
     # ← شغّل الـ agent في thread منفصل عشان ما يقفلش الـ event loop
-    # ده بيمنع رسالة "لا نستطيع الوصول للسيرفر"
     response = await asyncio.get_event_loop().run_in_executor(
-        None, lambda: agent.run(message.content)
+        None, lambda: agent.run(final_query)
     )
 
     if hasattr(response, "content") and response.content:
@@ -95,15 +119,8 @@ async def main(message: cl.Message):
 
     save_message(session_id=session_id, role="assistant", content=full_text)
 
-    # تأثير الكتابة التدريجي
-    current_text = ""
-    for char in full_text:
-        current_text += char
-        msg.content = current_text + CURSOR
-        await msg.update()
-        await asyncio.sleep(TYPING_SPEED)
-
-    msg.content = current_text.strip()
+    # تحديث الرسالة فوراً لتحسين الأداء (إزالة تأثير الكتابة البطيء)
+    msg.content = full_text.strip()
     await msg.update()
 
 @cl.on_chat_resume

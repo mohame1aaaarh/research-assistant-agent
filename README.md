@@ -101,5 +101,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-### 👨‍💻 Developed by [Mohamed](https://github.com/mohame1aaaarh)
+### 👨‍💻 Developed by [Logic Lords](https://github.com/mohame1aaaarh)
 *Made with ❤️ for the research community.*
